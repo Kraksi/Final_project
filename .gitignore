@@ -1,0 +1,61 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# C extensions
+*.so
+
+# Distribution / packaging
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Installer logs
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Virtual Environments
+venv/
+.venv/
+
+
+# Jupyter Notebook checkpoints
+.ipynb_checkpoints
+
+# Jupyter runtime files
+.jupyter/
+.local/share/jupyter/runtime/
+
+# VS Code settings
+.vscode/
+
+# Windows
+Thumbs.db
+desktop.ini
+
+# Logs
+*.log
+
+# Parquet files or large data
+*.parquet
+
+# HDFS data if stored locally
+covid_dataset/
+images/
+
+# Hidden files
+*.swp
+*.swo
