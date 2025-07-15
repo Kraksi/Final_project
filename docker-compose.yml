@@ -1,108 +1,50 @@
 version: "3.8"
 
 services:
-
   namenode:
-    image: bde2020/hadoop-namenode:2.0.0-hadoop3.2.1-java8
+    image: bitnami/hadoop:3.3.6
     container_name: namenode
     environment:
-      - CLUSTER_NAME=test
-      - CORE_CONF_fs_defaultFS=hdfs://namenode:9000
+      - HDFS_CONF_dfs_replication=1
+      - ALLOW_EMPTY_PASSWORD=yes
     ports:
-      - "9870:9870"
-      - "9000:9000"
-    networks:
-      - hadoop
+      - "9870:9870"    # Hadoop NameNode UI
+      - "9000:9000"    # HDFS RPC
+    volumes:
+      - namenode_data:/bitnami/hadoop
+      - ./docker_data:/data
 
   datanode:
-    image: bde2020/hadoop-datanode:2.0.0-hadoop3.2.1-java8
+    image: bitnami/hadoop:3.3.6
     container_name: datanode
     environment:
-      - CLUSTER_NAME=test
-      - CORE_CONF_fs_defaultFS=hdfs://namenode:9000
-      - SERVICE_PRECONDITION=namenode:9000
-      - HDFS_CONF_dfs_datanode_hostname=datanode
-      - HDFS_CONF_dfs_datanode_address=0.0.0.0:9866
-      - HDFS_CONF_dfs_datanode_http-address=0.0.0.0:9864
-      - HDFS_CONF_dfs_datanode_ipc-address=0.0.0.0:9867
+      - HDFS_CONF_dfs_replication=1
+      - ALLOW_EMPTY_PASSWORD=yes
+      - HDFS_CONF_dfs_namenode_rpc-address=namenode:9000
     depends_on:
       - namenode
-    ports:
-      - "9864:9864"
-    networks:
-      - hadoop
+    volumes:
+      - datanode_data:/bitnami/hadoop
 
-  spark-master:
-    image: bitnami/spark:latest
-    container_name: spark-master
-    user: "1001:1001"
-    entrypoint: ["/bin/bash", "-c"]
-    command: |
-      # Установим зависимости
-      pip install --no-cache-dir -r /docker_data/requirements.txt
-
-      # Создаём нужные локальные папки
-      mkdir -p /covid_dataset/images
-      mkdir -p /covid_dataset/metadata
-      mkdir -p /covid_dataset/processed
-
-      # Копируем скрипты
-      cp /docker_data/preproces.py /opt/bitnami/spark/preproces.py
-      cp /docker_data/covid_full_pipeline.py /opt/bitnami/spark/covid_full_pipeline.py
-
-      # Копируем данные
-      cp /docker_data/metadata.csv /covid_dataset/metadata/metadata.csv
-      cp -r /docker_data/images/* /covid_dataset/images/ || true
-
-      # Запускаем препроцессинг, который создаст metadata_cleaned.csv
-      /opt/bitnami/spark/bin/spark-submit --master local /opt/bitnami/spark/preproces.py
-
-      # Создаём каталоги в HDFS
-      hdfs dfs -mkdir -p /covid_dataset/images
-      hdfs dfs -mkdir -p /covid_dataset/metadata
-      hdfs dfs -mkdir -p /covid_dataset/processed
-
-      # Загружаем данные в HDFS
-      hdfs dfs -put -f /covid_dataset/images/* /covid_dataset/images/ || true
-      hdfs dfs -put -f /covid_dataset/metadata/metadata_cleaned.csv /covid_dataset/metadata/metadata_cleaned.csv
-
-      # Запускаем основной pipeline
-      /opt/bitnami/spark/bin/spark-submit --master local /opt/bitnami/spark/covid_full_pipeline.py
-
-      # Запускаем Spark Master в фоне
-      /opt/bitnami/scripts/spark/entrypoint.sh /opt/bitnami/scripts/spark/run.sh
+  spark:
+    build:
+      context: .
+      dockerfile: spark.Dockerfile
+    container_name: spark
     environment:
       - SPARK_MODE=master
-      - SPARK_RPC_AUTHENTICATION=no
-      - SPARK_RPC_ENCRYPTION=no
-      - SPARK_LOCAL_STORAGE_ENCRYPTION=no
-      - SPARK_SSL_ENABLED=no
-      - CORE_CONF_fs_defaultFS=hdfs://namenode:9000
+      - SPARK_RPC_AUTHENTICATION_ENABLED=no
+      - ALLOW_EMPTY_PASSWORD=yes
+    user: "1001:1001"
     ports:
       - "8080:8080"
-      - "7077:7077"
-    networks:
-      - hadoop
-    volumes:
-      - ./docker_data:/docker_data
-
-  spark-worker:
-    image: bitnami/spark:latest
-    container_name: spark-worker
-    user: "1001:1001"
-    environment:
-      - SPARK_MODE=worker
-      - SPARK_MASTER_URL=spark://spark-master:7077
-      - CORE_CONF_fs_defaultFS=hdfs://namenode:9000
+      - "4040:4040"
+      - "18080:18080"
     depends_on:
-      - spark-master
-    ports:
-      - "8081:8081"
-    networks:
-      - hadoop
+      - namenode
     volumes:
-      - ./docker_data:/docker_data
+      - ./docker_data:/data
 
-networks:
-  hadoop:
-    driver: bridge
+volumes:
+  namenode_data:
+  datanode_data:
