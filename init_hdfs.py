@@ -37,30 +37,30 @@ if __name__ == "__main__":
     # Шаг 2 — Загрузка изображений в HDFS
     # ------------------------------------------------------------
 
-    # print("\n🔍 Получаю список файлов в /data/images ...")
-    # result = subprocess.run(
-    #     ["docker", "exec", "namenode", "bash", "-c", "ls -1 /data/images"],
-    #     capture_output=True, text=True
-    # )
+    print("\n🔍 Получаю список файлов в /data/images ...")
+    result = subprocess.run(
+        ["docker", "exec", "namenode", "bash", "-c", "ls -1 /data/images"],
+        capture_output=True, text=True
+    )
 
-    # if result.returncode != 0:
-    #     print("❌ Ошибка при получении списка файлов:")
-    #     print(result.stderr)
-    # else:
-    #     files = result.stdout.strip().split('\n')
-    #     if not files or files == ['']:
-    #         print("⚠️ В папке /data/images нет файлов для загрузки.")
-    #     else:
-    #         print(f"✅ Найдено файлов: {len(files)}\n")
+    if result.returncode != 0:
+        print("❌ Ошибка при получении списка файлов:")
+        print(result.stderr)
+    else:
+        files = result.stdout.strip().split('\n')
+        if not files or files == ['']:
+            print("⚠️ В папке /data/images нет файлов для загрузки.")
+        else:
+            print(f"✅ Найдено файлов: {len(files)}\n")
 
-    #         for i, file_name in enumerate(files, start=1):
-    #             print(f" → [{i}/{len(files)}] Загружаю {file_name} ...")
-    #             run_command([
-    #                 "docker", "exec", "namenode",
-    #                 "hdfs", "dfs", "-put", "-f",
-    #                 f"/data/images/{file_name}",
-    #                 "/covid_dataset/images/"
-    #             ])
+            for i, file_name in enumerate(files, start=1):
+                print(f" → [{i}/{len(files)}] Загружаю {file_name} ...")
+                run_command([
+                    "docker", "exec", "namenode",
+                    "hdfs", "dfs", "-put", "-f",
+                    f"/data/images/{file_name}",
+                    "/covid_dataset/images/"
+                ])
 
     # ------------------------------------------------------------
     # Шаг 3 — Загрузка metadata.csv в HDFS
