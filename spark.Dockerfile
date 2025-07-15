@@ -2,13 +2,16 @@ FROM bde2020/spark-master:2.4.0-hadoop2.7
 
 USER root
 
-RUN apt-get update && \
-    apt-get install -y python3 python3-pip && \
-    rm -rf /var/lib/apt/lists/*
+RUN apk update && \
+    apk add --no-cache python3 py3-pip python3-dev build-base musl-dev linux-headers
 
-COPY ./docler_data/requirements.txt /tmp/requirements.txt
+RUN pip3 install --upgrade pip
+
+COPY ./docker_data/requirements-docker.txt /tmp/requirements.txt
 
 RUN pip3 install --no-cache-dir -r /tmp/requirements.txt
 
 USER root
+
+
 

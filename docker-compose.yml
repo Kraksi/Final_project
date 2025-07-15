@@ -33,25 +33,25 @@ services:
     volumes:
       - datanode_data:/hadoop/dfs/data
 
-spark:
-  build:
-    context: .
-    dockerfile: spark.Dockerfile
-  container_name: spark
-  environment:
-    - CORE_CONF_fs_defaultFS=hdfs://namenode:9000
-    - SPARK_CONF_spark_eventLog_enabled=true
-    - SPARK_CONF_spark_eventLog_dir=hdfs://namenode:9000/spark-logs
-    - SPARK_CONF_spark_history_fs_logDirectory=hdfs://namenode:9000/spark-logs
-  depends_on:
-    namenode:
-      condition: service_healthy
-  ports:
-    - "8080:8080"
-    - "4040:4040"
-    - "18080:18080"
-  volumes:
-    - ./docker_data:/data
+  spark:
+    build:
+      context: .
+      dockerfile: spark.Dockerfile
+    container_name: spark
+    environment:
+      - CORE_CONF_fs_defaultFS=hdfs://namenode:9000
+      - SPARK_CONF_spark_eventLog_enabled=true
+      - SPARK_CONF_spark_eventLog_dir=hdfs://namenode:9000/spark-logs
+      - SPARK_CONF_spark_history_fs_logDirectory=hdfs://namenode:9000/spark-logs
+    depends_on:
+      namenode:
+        condition: service_healthy
+    ports:
+      - "8080:8080"
+      - "4040:4040"
+      - "18080:18080"
+    volumes:
+      - ./docker_data:/data
 
 volumes:
   namenode_data:

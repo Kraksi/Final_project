@@ -1,72 +1,68 @@
 import subprocess
-import os
 
-NAMENODE_CONTAINER = "namenode"
-
-# HDFS директории
-HDFS_DIRS = [
-    "/covid_dataset/images/",
-    "/covid_dataset/metadata",
-    "/covid_dataset/processed"
-]
-
-# Локальные директории внутри контейнера
-LOCAL_IMAGES_DIR = "/data/images"
-LOCAL_METADATA_FILE = "/data/metadata.csv"
-
-# Пути в HDFS
-HDFS_IMAGES_DIR = "/covid_dataset/images"
-HDFS_METADATA_FILE = "/covid_dataset/metadata/metadata.csv"
-
-
-def run_hdfs_cmd(args):
-    cmd = ["docker", "exec", NAMENODE_CONTAINER] + args
-    result = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+def run_command(command_list):
+    """
+    Выполняет команду в shell и выводит stdout/stderr.
+    """
+    command_str = " ".join(command_list)
+    print(f"\nВыполняю команду: {command_str}")
+    result = subprocess.run(command_list, capture_output=True, text=True)
     if result.returncode != 0:
-        print(f"Ошибка команды: {' '.join(cmd)}")
+        print("❌ Ошибка при выполнении команды:")
         print(result.stderr)
-        raise RuntimeError("HDFS command failed")
     else:
         print(result.stdout)
 
-
-def create_hdfs_dirs():
-    for dir_path in HDFS_DIRS:
-        print(f"Создаю папку {dir_path} в HDFS...")
-        run_hdfs_cmd(["hdfs", "dfs", "-mkdir", "-p", dir_path])
-
-
-def upload_images():
-    print(f"Загружаю изображения из {LOCAL_IMAGES_DIR} в HDFS {HDFS_IMAGES_DIR} ...")
-
-    local_dir = os.path.join(".", "docler_data", "images")
-    if not os.path.exists(local_dir):
-        print(f"Локальная директория {local_dir} не существует.")
-        return
-    files = os.listdir(local_dir)
-    if not files:
-        print(f"Нет файлов в {local_dir}.")
-        return
-
-    run_hdfs_cmd([
-        "hdfs", "dfs", "-put", "-f", f"{LOCAL_IMAGES_DIR}/*", HDFS_IMAGES_DIR
-    ])
-
-
-def upload_metadata():
-    local_path = os.path.join(".", "docler_data", "metadata.csv")
-    if not os.path.exists(local_path):
-        print("Файл metadata.csv не найден.")
-        return
-
-    print(f"Загружаю metadata.csv в HDFS {HDFS_METADATA_FILE} ...")
-    run_hdfs_cmd([
-        "hdfs", "dfs", "-put", "-f", LOCAL_METADATA_FILE, HDFS_METADATA_FILE
-    ])
-
-
 if __name__ == "__main__":
-    create_hdfs_dirs()
-    upload_images()
-    upload_metadata()
-    print("Инициализация HDFS завершена.")
+    print("🚀 Запуск загрузки данных в HDFS...\n")
+
+    # Создание папок в HDFS
+    folders = [
+        "/covid_dataset/images",
+        "/covid_dataset/metadata",
+        "/covid_dataset/processed"
+    ]
+
+    for folder in folders:
+        print(f"📁 Создаю папку {folder} в HDFS...")
+        run_command([
+            "docker", "exec", "namenode",
+            "hdfs", "dfs", "-mkdir", "-p", folder
+        ])
+
+    # Получаем список файлов в /data/images
+    print("\n🔍 Получаю список файлов в /data/images ...")
+    result = subprocess.run(
+        ["docker", "exec", "namenode", "bash", "-c", "ls -1 /data/images"],
+        capture_output=True, text=True
+    )
+
+    if result.returncode != 0:
+        print("❌ Ошибка при получении списка файлов:")
+        print(result.stderr)
+    else:
+        files = result.stdout.strip().split('\n')
+        if not files or files == ['']:
+            print("⚠️ В папке /data/images нет файлов для загрузки.")
+        else:
+            print(f"✅ Найдено файлов: {len(files)}\n")
+
+            for i, file_name in enumerate(files, start=1):
+                print(f" → [{i}/{len(files)}] Загружаю {file_name} ...")
+                run_command([
+                    "docker", "exec", "namenode",
+                    "hdfs", "dfs", "-put", "-f",
+                    f"/data/images/{file_name}",
+                    "/covid_dataset/images/"
+                ])
+
+    # Загружаем metadata.csv
+    print("\n📄 Загружаю metadata.csv в HDFS...")
+    run_command([
+        "docker", "exec", "namenode",
+        "hdfs", "dfs", "-put", "-f",
+        "/data/metadata.csv",
+        "/covid_dataset/metadata/"
+    ])
+
+    print("\n✅ Загрузка в HDFS завершена успешно!")
