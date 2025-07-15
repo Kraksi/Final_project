@@ -1,11 +1,14 @@
-FROM bitnami/spark:3.5.1
+FROM bde2020/spark-master:2.4.0-hadoop2.7
 
 USER root
 
-RUN install_packages python3 python3-pip
+RUN apt-get update && \
+    apt-get install -y python3 python3-pip && \
+    rm -rf /var/lib/apt/lists/*
 
-COPY ./docker_data/requirements.txt /tmp/requirements.txt
+COPY ./docler_data/requirements.txt /tmp/requirements.txt
 
 RUN pip3 install --no-cache-dir -r /tmp/requirements.txt
 
-USER 1001
+USER root
+
