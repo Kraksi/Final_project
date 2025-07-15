@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 from pyspark.sql import SparkSession, Row, functions as F, types as T
 from pyspark.ml.clustering import KMeans
 from pyspark.ml.feature import VectorAssembler, StringIndexer
@@ -5,7 +7,7 @@ from pyspark.ml.feature import VectorAssembler, StringIndexer
 def main():
     spark = SparkSession.builder \
         .appName("COVID19 Full Pipeline") \
-        .config("spark.hadoop.fs.defaultFS", "hdfs://namenode:9000") \
+        .config("spark.sql.warehouse.dir", "/tmp/hive_warehouse") \
         .enableHiveSupport() \
         .getOrCreate()
 

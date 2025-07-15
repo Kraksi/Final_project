@@ -1,17 +1,22 @@
-FROM bde2020/spark-master:2.4.0-hadoop2.7
+FROM bitnami/spark:3.4.1
 
 USER root
 
-RUN apk update && \
-    apk add --no-cache python3 py3-pip python3-dev build-base musl-dev linux-headers
+# Устанавливаем Python 3 и pip (bitnami образ уже содержит python)
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends python3-dev build-essential libsnappy-dev && \
+    rm -rf /var/lib/apt/lists/*
 
-RUN pip3 install --upgrade pip
-
+# Обновляем pip и ставим зависимости
 COPY ./docker_data/requirements-docker.txt /tmp/requirements.txt
 
-RUN pip3 install --no-cache-dir -r /tmp/requirements.txt
+RUN pip install --no-cache-dir --upgrade pip && \
+    pip install --no-cache-dir -r /tmp/requirements.txt
 
-USER root
+# Указываем рабочую директорию
+WORKDIR /spark
 
+# Добавляем Spark bin в PATH (на всякий случай)
+ENV PATH="/opt/bitnami/spark/bin:${PATH}"
 
-
+USER 1001

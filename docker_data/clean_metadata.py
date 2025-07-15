@@ -34,6 +34,12 @@ def clean_metadata():
     print("[INFO] Чтение исходного CSV...")
     df = pd.read_csv(INPUT_FILE)
 
+    # Удаляем все Unnamed-колонки
+    unnamed_cols = [col for col in df.columns if col.startswith("Unnamed")]
+    if unnamed_cols:
+        print(f"[INFO] Удаляю лишние колонки: {unnamed_cols}")
+        df.drop(columns=unnamed_cols, inplace=True)
+
     # Приведение к верхнему регистру
     df["finding"] = df["finding"].str.upper()
 
