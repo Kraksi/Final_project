@@ -1,15 +1,28 @@
 # -*- coding: utf-8 -*-
-
+import os
 from pyspark.sql import SparkSession, Row, functions as F, types as T
 from pyspark.ml.clustering import KMeans
 from pyspark.ml.feature import VectorAssembler, StringIndexer
 
 def main():
+    
+
+# Проверим, можем ли мы писать в /spark
+    if os.access("/spark", os.W_OK):
+        warehouse_dir = "/spark/spark_warehouse"
+        metastore_dir = "/spark/metastore_db"
+    else:
+        warehouse_dir = "/tmp/spark_warehouse"
+        metastore_dir = "/tmp/metastore_db"
+
     spark = SparkSession.builder \
         .appName("COVID19 Full Pipeline") \
-        .config("spark.sql.warehouse.dir", "/tmp/hive_warehouse") \
+        .config("spark.sql.warehouse.dir", warehouse_dir) \
+        .config("javax.jdo.option.ConnectionURL", f"jdbc:derby:;databaseName={metastore_dir};create=true") \
         .enableHiveSupport() \
         .getOrCreate()
+
+
 
     # ============================================================
     # Шаг 1 — Чтение CSV
