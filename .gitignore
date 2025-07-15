@@ -49,8 +49,6 @@ desktop.ini
 # Logs
 *.log
 
-# Parquet files or large data
-*.parquet
 
 # HDFS data if stored locally
 covid_dataset/
