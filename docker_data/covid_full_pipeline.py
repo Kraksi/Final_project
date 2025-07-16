@@ -6,8 +6,6 @@ from pyspark.ml.feature import VectorAssembler, StringIndexer
 
 def main():
     
-
-# Проверим, можем ли мы писать в /spark
     if os.access("/spark", os.W_OK):
         warehouse_dir = "/spark/spark_warehouse"
         metastore_dir = "/spark/metastore_db"
@@ -96,7 +94,7 @@ def main():
     query2.write.mode("overwrite").parquet(
         "hdfs://namenode:9000/covid_dataset/processed/query2_views_join.parquet"
     )
-    print("✅ JOIN выполнен и сохранён.")
+    print("JOIN выполнен и сохранён.")
 
     # Подзапрос для расчёта процента COVID-19
     query3 = spark.sql("""
@@ -117,7 +115,7 @@ def main():
     query3.write.mode("overwrite").parquet(
         "hdfs://namenode:9000/covid_dataset/processed/query3_covid_stats.parquet"
     )
-    print("✅ Подзапрос выполнен и сохранён.")
+    print("Подзапрос выполнен и сохранён.")
 
     # ============================================================
     # Шаг 4 — PySpark-обработка
@@ -130,7 +128,7 @@ def main():
     covid_df.write.mode("overwrite").parquet(
         "hdfs://namenode:9000/covid_dataset/processed/covid_only.parquet"
     )
-    print("✅ Фильтрация по COVID-19 выполнена и данные сохранены.")
+    print("Фильтрация по COVID-19 выполнена и данные сохранены.")
 
     # ------------------------------------------------------------
     # UDF — Унификация диагнозов
@@ -169,13 +167,12 @@ def main():
     df_udf.write.mode("overwrite").parquet(
         "hdfs://namenode:9000/covid_dataset/processed/metadata_with_udf.parquet"
     )
-    print("✅ UDF-обработка выполнена и данные сохранены.")
+    print("UDF-обработка выполнена и данные сохранены.")
 
     # ------------------------------------------------------------
     # ML — кластеризация KMeans
     # ------------------------------------------------------------
 
-    # Подготовим данные для ML
     indexer = StringIndexer(inputCol="sex", outputCol="sex_index", handleInvalid="keep")
     df_ml = indexer.fit(df_udf).transform(df_udf)
 
@@ -195,7 +192,7 @@ def main():
     predictions.write.mode("overwrite").parquet(
         "hdfs://namenode:9000/covid_dataset/processed/kmeans_clusters.parquet"
     )
-    print("✅ Кластеризация выполнена и результаты сохранены.")
+    print("Кластеризация выполнена и результаты сохранены.")
 
     # ------------------------------------------------------------
     # Финальное сохранение metadata.parquet
@@ -204,10 +201,10 @@ def main():
     df_udf.write.mode("overwrite").parquet(
         "hdfs://namenode:9000/covid_dataset/metadata/metadata.parquet"
     )
-    print("✅ metadata.parquet сохранён в HDFS.")
+    print("metadata.parquet сохранён в HDFS.")
 
     spark.stop()
-    print("🎉 Все этапы скрипта успешно выполнены.")
+    print("Все этапы скрипта успешно выполнены.")
 
 if __name__ == "__main__":
     main()

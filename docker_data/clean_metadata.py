@@ -2,14 +2,9 @@ import pandas as pd
 import numpy as np
 import subprocess
 
-# Пути внутри проекта
 INPUT_FILE = "./docker_data/metadata.csv"
 OUTPUT_FILE = "./docker_data/metadata_cleaned.csv"
-
-# Путь в контейнере
 CONTAINER_FILE_PATH = "/tmp/metadata_cleaned.csv"
-
-# Путь в HDFS
 HDFS_PATH = "/covid_dataset/metadata/metadata_cleaned.csv"
 
 # Функция для классификации возраста в группы
